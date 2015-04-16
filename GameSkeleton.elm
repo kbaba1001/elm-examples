@@ -1,7 +1,10 @@
-import Graphics.Element exposing (..)
+import Color (..)
+import Graphics.Collage (..)
+import Graphics.Element (..)
+import Keyboard
+import Signal
 import Time
 import Window
-
 
 {-- Part 1: Model the user input ----------------------------------------------
 
@@ -13,13 +16,13 @@ Task: Redefine `UserInput` to include all of the information you need.
 
 ------------------------------------------------------------------------------}
 
-type alias UserInput = {}
-
+type alias UserInput = { space : Bool, dir1 : Int }
 
 userInput : Signal UserInput
 userInput =
-    Signal.constant {}
-
+  Signal.map2 UserInput
+    Keyboard.space
+    (Signal.map .x Keyboard.arrows)
 
 type alias Input =
     { timeDelta : Float
@@ -44,12 +47,29 @@ be an empty list (no objects at the start):
 
 ------------------------------------------------------------------------------}
 
-type alias GameState = {}
+(gameWidth,gameHeight) = (400, 600)
+(halfWidth,halfHeight) = (200, 300)
+
+type State = Play | Pause
+
+type alias Player =
+  { x:Float, y:Float, vx:Float, vy:Float }
+
+type alias GameState =
+  { state:State
+  , player:Player
+  }
 
 defaultGame : GameState
 defaultGame =
-    {}
-
+  { state = Pause
+  , player =
+      { x = 0
+      , y = 20 - halfHeight
+      , vx = 0
+      , vy = 0
+      }
+  }
 
 
 {-- Part 3: Update the game ---------------------------------------------------
@@ -77,9 +97,19 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) gameState =
-    show gameState
+display (w,h) {state,player} =
+  container w h middle <|
+    collage gameWidth gameHeight
+      [ rect gameWidth gameHeight
+          |> filled green
+      , rect 40 10
+          |> make player
+      ]
 
+make obj shape =
+  shape
+    |> filled white
+    |> move (obj.x, obj.y)
 
 
 {-- That's all folks! ---------------------------------------------------------
