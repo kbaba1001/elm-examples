@@ -16,7 +16,7 @@ Task: Redefine `UserInput` to include all of the information you need.
 
 ------------------------------------------------------------------------------}
 
-type alias UserInput = { space : Bool, dir1 : Int }
+type alias UserInput = { space : Bool, dir : Int }
 
 userInput : Signal UserInput
 userInput =
@@ -28,8 +28,6 @@ type alias Input =
     { timeDelta : Float
     , userInput : UserInput
     }
-
-
 
 {-- Part 2: Model the game ----------------------------------------------------
 
@@ -83,10 +81,36 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} gameState =
-    gameState
+stepGame {timeDelta,userInput} ({state,player} as game) =
+  { game |
+      player <- updatePlayer timeDelta userInput player
+  }
 
+--space : Bool, dir : Int
+--updatePlayer : Time ->
+--dir
+updatePlayer deltaTime userInput player =
+  let player = physicsUpdate deltaTime { player | vx <- toFloat userInput.dir }
+  in
+    { player |
+        x <- player.x
+    }
 
+--clamp (22-halfWidth) (halfWidth-22) player.x
+
+--updatePlayer t dir points player =
+--  let player1 = physicsUpdate  t { player | vy <- toFloat dir * 200 }
+--  in
+--      { player1 |
+--          y <- clamp (22-halfHeight) (halfHeight-22) player1.y,
+--          score <- player.score + points
+--      }
+
+physicsUpdate t ({x,y,vx,vy} as obj) =
+  { obj |
+      x <- x + vx * t,
+      y <- y + vy * t
+  }
 
 {-- Part 4: Display the game --------------------------------------------------
 
