@@ -54,17 +54,27 @@ be an empty list (no objects at the start):
 
 type State = Play | Pause
 
+type alias Ball =
+  { x:Float, y:Float, vx:Float, vy:Float }
+
 type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
 type alias GameState =
-  { state:State
-  , player:Player
+  { state : State
+  , ball : Ball
+  , player : Player
   }
 
 defaultGame : GameState
 defaultGame =
   { state = Pause
+  , ball =
+      { x = 0
+      , y = 0
+      , vx = 200
+      , vy = 200
+      }
   , player =
       { x = 0
       , y = 20 - halfHeight
@@ -85,10 +95,14 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({state,player} as game) =
+stepGame {timeDelta,userInput} ({state,ball,player} as game) =
   { game |
+      ball <- updateBall timeDelta ball,
       player <- updatePlayer timeDelta userInput.dir player
   }
+
+updateBall deltaTime ({x,y,vx,vy} as ball) =
+  physicsUpdate deltaTime ball
 
 updatePlayer deltaTime dir player =
   let player1 = physicsUpdate deltaTime { player | vx <- toFloat dir * 200 }
@@ -112,11 +126,13 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({state,player} as gameState) =
+display (w,h) ({state,ball,player} as gameState) =
   container w h middle <|
     collage 1000 1000
       [ rect gameWidth gameHeight
           |> filled green
+      , oval 15 15
+            |> make ball
       , rect 40 10
           |> make player
       , toForm (asText gameState)
@@ -126,7 +142,7 @@ display (w,h) ({state,player} as gameState) =
 
 make obj shape =
   shape
-    |> filled white
+    |> filled red
     |> move (obj.x, obj.y)
 
 
