@@ -3,8 +3,9 @@ import Graphics.Collage (..)
 import Graphics.Element (..)
 import Keyboard
 import Signal
-import Time
+import Time (..)
 import Window
+import Text (..)
 
 {-- Part 1: Model the user input ----------------------------------------------
 
@@ -16,7 +17,10 @@ Task: Redefine `UserInput` to include all of the information you need.
 
 ------------------------------------------------------------------------------}
 
-type alias UserInput = { space : Bool, dir : Int }
+type alias UserInput =
+  { space : Bool
+  , dir : Int
+  }
 
 userInput : Signal UserInput
 userInput =
@@ -83,28 +87,15 @@ Task: redefine `stepGame` to use the UserInput and GameState
 stepGame : Input -> GameState -> GameState
 stepGame {timeDelta,userInput} ({state,player} as game) =
   { game |
-      player <- updatePlayer timeDelta userInput player
+      player <- updatePlayer timeDelta userInput.dir player
   }
 
---space : Bool, dir : Int
---updatePlayer : Time ->
---dir
-updatePlayer deltaTime userInput player =
-  let player = physicsUpdate deltaTime { player | vx <- toFloat userInput.dir }
+updatePlayer deltaTime dir player =
+  let player1 = physicsUpdate deltaTime { player | vx <- toFloat dir * 200 }
   in
-    { player |
-        x <- player.x
+    { player1 |
+        x <- clamp (22-halfWidth) (halfWidth-22) player1.x
     }
-
---clamp (22-halfWidth) (halfWidth-22) player.x
-
---updatePlayer t dir points player =
---  let player1 = physicsUpdate  t { player | vy <- toFloat dir * 200 }
---  in
---      { player1 |
---          y <- clamp (22-halfHeight) (halfHeight-22) player1.y,
---          score <- player.score + points
---      }
 
 physicsUpdate t ({x,y,vx,vy} as obj) =
   { obj |
@@ -121,14 +112,17 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) {state,player} =
+display (w,h) ({state,player} as gameState) =
   container w h middle <|
-    collage gameWidth gameHeight
+    collage 1000 1000
       [ rect gameWidth gameHeight
           |> filled green
       , rect 40 10
           |> make player
+      , toForm (asText gameState)
+          |> move (0.0, halfHeight+20)
       ]
+
 
 make obj shape =
   shape
@@ -144,7 +138,7 @@ The following code puts it all together and shows it on screen.
 
 delta : Signal Float
 delta =
-    Time.fps 30
+    Signal.map inSeconds (fps 30)
 
 
 input : Signal Input
