@@ -5,7 +5,7 @@ import Keyboard
 import Signal
 import Time (..)
 import Window
-import Text (..)
+import Text
 
 {-- Part 1: Model the user input ----------------------------------------------
 
@@ -53,7 +53,7 @@ type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
 type alias Block =
-  { x:Float, y:Float, vx:Float, vy:Float }
+  { x:Float, y:Float, vx:Float, vy:Float, visible: Bool }
 
 type alias GameState =
   { ball : Ball
@@ -80,6 +80,7 @@ defaultGame =
       , y = halfWidth - 40
       , vx = 0
       , vy = 0
+      , visible = True
       }
   }
 
@@ -95,10 +96,11 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({ball,player} as game) =
+stepGame {timeDelta,userInput} ({ball,player,block1} as game) =
   { game |
       ball <- updateBall timeDelta ball player,
-      player <- updatePlayer timeDelta userInput.dir player
+      player <- updatePlayer timeDelta userInput.dir player,
+      block1 <- block1
   }
 
 updateBall deltaTime ({x,y,vx,vy} as ball) player =
@@ -150,8 +152,7 @@ display (w,h) ({ball,player,block1} as gameState) =
             |> make ball
       , rect 40 10
           |> make player
-      , rect 40 20
-          |> make block1
+      , showBlock block1
       --, toForm (asText gameState)
       --    |> move (0.0, halfHeight+20)
       ]
@@ -162,6 +163,12 @@ make obj shape =
     |> filled white
     |> move (obj.x, obj.y)
 
+showBlock block =
+  if block.visible == True then
+    rect 40 20
+      |> make block
+  else
+    toForm empty
 
 {-- That's all folks! ---------------------------------------------------------
 
