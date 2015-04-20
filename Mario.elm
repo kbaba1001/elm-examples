@@ -26,7 +26,7 @@ type alias Keys = { x:Int, y:Int }
 mario : Model
 mario =
     { x = 0
-    , y = 0 
+    , y = 0
     , vx = 0
     , vy = 0
     , dir = Right
@@ -127,8 +127,13 @@ main =
 
 input : Signal (Float, Keys)
 input =
+  -- 600fps ?
   let delta = Signal.map (\t -> t/20) (fps 30)
       deltaArrows =
           Signal.map2 (,) delta (Signal.map (Debug.watch "arrows") Keyboard.arrows)
   in
       Signal.sampleOn delta deltaArrows
+
+
+--1s |< >|<   >|<  >| |
+--   |/20| /20 | /20| |

@@ -30,6 +30,13 @@ input =
       (Signal.map .y Keyboard.arrows)
       delta
 
+type alias Input =
+    { space : Bool
+    , dir1 : Int
+    , dir2 : Int
+    , delta : Time
+    }
+
 
 -- MODEL
 
@@ -59,14 +66,6 @@ defaultGame =
   , player1 = player (20-halfWidth)
   , player2 = player (halfWidth-20)
   }
-
-
-type alias Input =
-    { space : Bool
-    , dir1 : Int
-    , dir2 : Int
-    , delta : Time
-    }
 
 
 -- UPDATE
