@@ -105,14 +105,14 @@ updateBall deltaTime ({x,y,vx,vy} as ball) player =
   physicsUpdate deltaTime
     { ball |
         vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
-        vy <- stepV vy (y < 7 - halfHeight) (y > halfHeight - 7)
+        vy <- stepV vy (ball `within` player) (y > halfHeight - 7)
     }
 
 near k c n =
     n >= k-c && n <= k+c
 
 within ball paddle =
-    near paddle.x 8 ball.x && near paddle.y 20 ball.y
+    near paddle.x 20 ball.x && near paddle.y 8 ball.y
 
 stepV v lowerCollision upperCollision =
   if | lowerCollision -> abs v
