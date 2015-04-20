@@ -97,12 +97,27 @@ Task: redefine `stepGame` to use the UserInput and GameState
 stepGame : Input -> GameState -> GameState
 stepGame {timeDelta,userInput} ({state,ball,player} as game) =
   { game |
-      ball <- updateBall timeDelta ball,
+      ball <- updateBall timeDelta ball player,
       player <- updatePlayer timeDelta userInput.dir player
   }
 
-updateBall deltaTime ({x,y,vx,vy} as ball) =
-  physicsUpdate deltaTime ball
+updateBall deltaTime ({x,y,vx,vy} as ball) player =
+  physicsUpdate deltaTime
+    { ball |
+        vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
+        vy <- stepV vy (y < 7 - halfHeight) (y > halfHeight - 7)
+    }
+
+near k c n =
+    n >= k-c && n <= k+c
+
+within ball paddle =
+    near paddle.x 8 ball.x && near paddle.y 20 ball.y
+
+stepV v lowerCollision upperCollision =
+  if | lowerCollision -> abs v
+     | upperCollision -> 0 - abs v
+     | otherwise      -> v
 
 updatePlayer deltaTime dir player =
   let player1 = physicsUpdate deltaTime { player | vx <- toFloat dir * 200 }
@@ -135,14 +150,14 @@ display (w,h) ({state,ball,player} as gameState) =
             |> make ball
       , rect 40 10
           |> make player
-      , toForm (asText gameState)
-          |> move (0.0, halfHeight+20)
+      --, toForm (asText gameState)
+      --    |> move (0.0, halfHeight+20)
       ]
 
 
 make obj shape =
   shape
-    |> filled red
+    |> filled white
     |> move (obj.x, obj.y)
 
 
