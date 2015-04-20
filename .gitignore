@@ -1,3 +1,6 @@
 elm-stuff
 .cabal-sandbox
 cabal.sandbox.config
+
+elm.js
+repl-temp-000.elm
