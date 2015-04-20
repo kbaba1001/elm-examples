@@ -76,7 +76,7 @@ defaultGame =
       , vy = 0
       }
   , block1 =
-      { x = 0
+      { x = -20
       , y = halfWidth - 40
       , vx = 0
       , vy = 0
@@ -98,23 +98,23 @@ Task: redefine `stepGame` to use the UserInput and GameState
 stepGame : Input -> GameState -> GameState
 stepGame {timeDelta,userInput} ({ball,player,block1} as game) =
   { game |
-      ball <- updateBall timeDelta ball player,
+      ball <- updateBall timeDelta ball player block1,
       player <- updatePlayer timeDelta userInput.dir player,
       block1 <- block1
   }
 
-updateBall deltaTime ({x,y,vx,vy} as ball) player =
+updateBall deltaTime ({x,y,vx,vy} as ball) player block1 =
   physicsUpdate deltaTime
     { ball |
         vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
-        vy <- stepV vy (ball `within` player) (y > halfHeight - 7)
+        vy <- stepV vy ((ball `within` player) || (ball `within` block1)) ((y > halfHeight - 7) || (ball `within` block1))
     }
 
 near k c n =
     n >= k-c && n <= k+c
 
 within ball paddle =
-    near paddle.x 20 ball.x && near paddle.y 8 ball.y
+    near paddle.x 20 ball.x && near paddle.y 10 ball.y
 
 stepV v lowerCollision upperCollision =
   if | lowerCollision -> abs v
@@ -165,7 +165,7 @@ make obj shape =
 
 showBlock block =
   if block.visible == True then
-    rect 40 20
+    rect 40 10
       |> make block
   else
     toForm empty
