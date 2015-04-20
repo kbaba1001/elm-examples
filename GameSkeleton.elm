@@ -52,9 +52,13 @@ type alias Ball =
 type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
+type alias Block =
+  { x:Float, y:Float, vx:Float, vy:Float }
+
 type alias GameState =
   { ball : Ball
   , player : Player
+  , block1 : Block
   }
 
 defaultGame : GameState
@@ -68,6 +72,12 @@ defaultGame =
   , player =
       { x = 0
       , y = 20 - halfHeight
+      , vx = 0
+      , vy = 0
+      }
+  , block1 =
+      { x = 0
+      , y = halfWidth - 40
       , vx = 0
       , vy = 0
       }
@@ -131,7 +141,7 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({ball,player} as gameState) =
+display (w,h) ({ball,player,block1} as gameState) =
   container w h middle <|
     collage 1000 1000
       [ rect gameWidth gameHeight
@@ -140,6 +150,8 @@ display (w,h) ({ball,player} as gameState) =
             |> make ball
       , rect 40 10
           |> make player
+      , rect 40 20
+          |> make block1
       --, toForm (asText gameState)
       --    |> move (0.0, halfHeight+20)
       ]
