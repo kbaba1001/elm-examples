@@ -100,7 +100,7 @@ stepGame {timeDelta,userInput} ({ball,player,block1} as game) =
   { game |
       ball <- updateBall timeDelta ball player block1,
       player <- updatePlayer timeDelta userInput.dir player,
-      block1 <- block1
+      block1 <- updateBlock timeDelta block1 ball
   }
 
 updateBall deltaTime ({x,y,vx,vy} as ball) player block1 =
@@ -134,6 +134,11 @@ physicsUpdate t ({x,y,vx,vy} as obj) =
   { obj |
       x <- x + vx * t,
       y <- y + vy * t
+  }
+
+updateBlock deltaTime block ball =
+  { block |
+      visible <- (block.visible && not (ball `within` block))
   }
 
 {-- Part 4: Display the game --------------------------------------------------
