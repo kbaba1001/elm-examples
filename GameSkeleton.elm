@@ -53,7 +53,7 @@ type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
 type alias Block =
-  { x:Float, y:Float, vx:Float, vy:Float, visible: Bool }
+  { x:Float, y:Float, visible: Bool }
 
 type alias GameState =
   { ball : Ball
@@ -79,15 +79,11 @@ defaultGame =
   , block1 =
       { x = -40
       , y = halfWidth - 40
-      , vx = 0
-      , vy = 0
       , visible = True
       }
   , block2 =
       { x = 40
       , y = halfWidth - 40
-      , vx = 0
-      , vy = 0
       , visible = True
       }
   }
