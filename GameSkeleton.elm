@@ -17,16 +17,10 @@ Task: Redefine `UserInput` to include all of the information you need.
 
 ------------------------------------------------------------------------------}
 
-type alias UserInput =
-  { space : Bool
-  , dir : Int
-  }
+type alias UserInput = { dir : Int }
 
 userInput : Signal UserInput
-userInput =
-  Signal.map2 UserInput
-    Keyboard.space
-    (Signal.map .x Keyboard.arrows)
+userInput = Signal.map UserInput (Signal.map .x Keyboard.arrows)
 
 type alias Input =
     { timeDelta : Float
@@ -52,8 +46,6 @@ be an empty list (no objects at the start):
 (gameWidth,gameHeight) = (400, 600)
 (halfWidth,halfHeight) = (200, 300)
 
-type State = Play | Pause
-
 type alias Ball =
   { x:Float, y:Float, vx:Float, vy:Float }
 
@@ -61,15 +53,13 @@ type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
 type alias GameState =
-  { state : State
-  , ball : Ball
+  { ball : Ball
   , player : Player
   }
 
 defaultGame : GameState
 defaultGame =
-  { state = Pause
-  , ball =
+  { ball =
       { x = 0
       , y = 0
       , vx = 200
@@ -95,7 +85,7 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({state,ball,player} as game) =
+stepGame {timeDelta,userInput} ({ball,player} as game) =
   { game |
       ball <- updateBall timeDelta ball player,
       player <- updatePlayer timeDelta userInput.dir player
@@ -141,7 +131,7 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({state,ball,player} as gameState) =
+display (w,h) ({ball,player} as gameState) =
   container w h middle <|
     collage 1000 1000
       [ rect gameWidth gameHeight
