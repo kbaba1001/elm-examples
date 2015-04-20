@@ -107,8 +107,10 @@ updateBall deltaTime ({x,y,vx,vy} as ball) player block1 =
   physicsUpdate deltaTime
     { ball |
         vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
-        vy <- stepV vy ((ball `within` player) || (ball `within` block1)) ((y > halfHeight - 7) || (ball `within` block1))
+        vy <- stepV vy ((ball `within` player) || (ball `isCollided` block1)) ((y > halfHeight - 7) || (ball `isCollided` block1))
     }
+
+isCollided ball block = if block.visible == True then (ball `within` block) else False
 
 near k c n =
     n >= k-c && n <= k+c
