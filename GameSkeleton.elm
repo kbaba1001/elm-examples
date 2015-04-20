@@ -59,6 +59,7 @@ type alias GameState =
   { ball : Ball
   , player : Player
   , block1 : Block
+  , block2 : Block
   }
 
 defaultGame : GameState
@@ -76,14 +77,20 @@ defaultGame =
       , vy = 0
       }
   , block1 =
-      { x = -20
+      { x = -40
+      , y = halfWidth - 40
+      , vx = 0
+      , vy = 0
+      , visible = True
+      }
+  , block2 =
+      { x = 40
       , y = halfWidth - 40
       , vx = 0
       , vy = 0
       , visible = True
       }
   }
-
 
 {-- Part 3: Update the game ---------------------------------------------------
 
@@ -96,18 +103,19 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({ball,player,block1} as game) =
+stepGame {timeDelta,userInput} ({ball,player,block1,block2} as game) =
   { game |
-      ball <- updateBall timeDelta ball player block1,
+      ball <- updateBall timeDelta ball player block1 block2,
       player <- updatePlayer timeDelta userInput.dir player,
-      block1 <- updateBlock timeDelta block1 ball
+      block1 <- updateBlock timeDelta block1 ball,
+      block2 <- updateBlock timeDelta block2 ball
   }
 
-updateBall deltaTime ({x,y,vx,vy} as ball) player block1 =
+updateBall deltaTime ({x,y,vx,vy} as ball) player block1 block2 =
   physicsUpdate deltaTime
     { ball |
         vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
-        vy <- stepV vy ((ball `within` player) || (ball `isCollided` block1)) ((y > halfHeight - 7) || (ball `isCollided` block1))
+        vy <- stepV vy ((ball `within` player) || (ball `isCollided` block1) || (ball `isCollided` block2)) ((y > halfHeight - 7) || (ball `isCollided` block1) || (ball `isCollided` block2))
     }
 
 isCollided ball block = if block.visible == True then (ball `within` block) else False
@@ -150,7 +158,7 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({ball,player,block1} as gameState) =
+display (w,h) ({ball,player,block1,block2} as gameState) =
   container w h middle <|
     collage 1000 1000
       [ rect gameWidth gameHeight
@@ -160,6 +168,7 @@ display (w,h) ({ball,player,block1} as gameState) =
       , rect 40 10
           |> make player
       , showBlock block1
+      , showBlock block2
       --, toForm (asText gameState)
       --    |> move (0.0, halfHeight+20)
       ]
