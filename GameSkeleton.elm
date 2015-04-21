@@ -6,6 +6,7 @@ import Signal
 import Time (..)
 import Window
 import Text
+import List
 
 {-- Part 1: Model the user input ----------------------------------------------
 
@@ -53,13 +54,17 @@ type alias Player =
   { x:Float, y:Float, vx:Float, vy:Float }
 
 type alias Block =
-  { x:Float, y:Float, width: Float, height: Float, visible: Bool }
+  { x:Float, y:Float, w:Float, h:Float }
+
+block : Float -> Float -> Float -> Float -> Block
+block x y w h = { x=x, y=y, w=w, h=h }
+(blockWidth, blockHeight) = (40,10)
+
 
 type alias GameState =
   { ball : Ball
   , player : Player
-  , block1 : Block
-  , block2 : Block
+  , blocks : List Block
   }
 
 defaultGame : GameState
@@ -76,20 +81,7 @@ defaultGame =
       , vx = 0
       , vy = 0
       }
-  , block1 =
-      { x = -40
-      , y = halfWidth - 40
-      , width = 40
-      , height = 10
-      , visible = True
-      }
-  , block2 =
-      { x = 40
-      , y = halfWidth - 40
-      , width = 40
-      , height = 10
-      , visible = True
-      }
+  , blocks = List.map (\x -> block (blockWidth * 2 * x) (halfWidth - 40) blockWidth blockHeight) [-2..2]
   }
 
 {-- Part 3: Update the game ---------------------------------------------------
@@ -103,13 +95,13 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({ball,player,block1,block2} as game) =
-  { game |
-      ball <- updateBall timeDelta ball player block1 block2,
-      player <- updatePlayer timeDelta userInput.dir player,
-      block1 <- updateBlock timeDelta block1 ball,
-      block2 <- updateBlock timeDelta block2 ball
-  }
+stepGame {timeDelta,userInput} ({ball,player,blocks} as game) =
+  game
+  --{ game |
+  --    ball <- updateBall timeDelta ball player (Array.get 0 blocks) (Array.get 1 blocks),
+  --    player <- updatePlayer timeDelta userInput.dir player,
+  --    blocks <- Array.fromList [(updateBlock timeDelta (Array.get 0 blocks) ball), (updateBlock timeDelta (Array.get 1 blocks) ball)]
+  --}
 
 updateBall deltaTime ({x,y,vx,vy} as ball) player block1 block2 =
   physicsUpdate deltaTime
@@ -158,33 +150,22 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({ball,player,block1,block2} as gameState) =
+display (w,h) ({ball,player,blocks} as gameState) =
   container w h middle <|
-    collage 1000 1000
+    collage 1000 1000 <|
       [ rect gameWidth gameHeight
           |> filled green
       , oval 15 15
             |> make ball
       , rect 40 10
           |> make player
-      , showBlock block1
-      , showBlock block2
-      --, toForm (asText gameState)
-      --    |> move (0.0, halfHeight+20)
+      , group <| List.map (\b -> rect b.w b.h |> make b) blocks
       ]
-
 
 make obj shape =
   shape
     |> filled white
     |> move (obj.x, obj.y)
-
-showBlock block =
-  if block.visible == True then
-    rect block.width block.height
-      |> make block
-  else
-    toForm empty
 
 {-- That's all folks! ---------------------------------------------------------
 
