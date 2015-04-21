@@ -96,21 +96,34 @@ Task: redefine `stepGame` to use the UserInput and GameState
 
 stepGame : Input -> GameState -> GameState
 stepGame {timeDelta,userInput} ({ball,player,blocks} as game) =
-  game
-  --{ game |
-  --    ball <- updateBall timeDelta ball player (Array.get 0 blocks) (Array.get 1 blocks),
-  --    player <- updatePlayer timeDelta userInput.dir player,
-  --    blocks <- Array.fromList [(updateBlock timeDelta (Array.get 0 blocks) ball), (updateBlock timeDelta (Array.get 1 blocks) ball)]
-  --}
-
-updateBall deltaTime ({x,y,vx,vy} as ball) player block1 block2 =
-  physicsUpdate deltaTime
-    { ball |
-        vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7),
-        vy <- stepV vy ((ball `within` player) || (ball `isCollided` block1) || (ball `isCollided` block2)) ((y > halfHeight - 7) || (ball `isCollided` block1) || (ball `isCollided` block2))
+  let
+    (ball', blocks') = stepBall timeDelta ball player blocks
+  in
+    { game | ball <- ball'
+           , blocks <- blocks'
+           , player <- updatePlayer timeDelta userInput.dir player
     }
 
-isCollided ball block = if block.visible == True then (ball `within` block) else False
+stepBall : Time -> Ball -> Player -> List Block -> (Ball, List Block)
+stepBall delta ({x,y,vx,vy} as ball) player blocks =
+  let
+    hitPlayer = (ball `within` player)
+    hitCeiling = (y > halfHeight - 7)
+    ball' = physicsUpdate delta
+      { ball | vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7)
+             , vy <- stepV vy hitPlayer hitCeiling
+      }
+  in
+    (List.foldr goBlockHits (ball',[]) blocks)
+
+goBlockHits : Block -> (Ball,List Block) -> (Ball,List Block)
+goBlockHits block (ball,blocks) =
+  let
+    hit = ball `within` block
+    blocks' = if hit then blocks else block::blocks
+    ball' = if hit then { ball | vy <- -ball.vy } else ball
+  in
+    (ball', blocks')
 
 near k c n =
     n >= k-c && n <= k+c
@@ -134,11 +147,6 @@ physicsUpdate t ({x,y,vx,vy} as obj) =
   { obj |
       x <- x + vx * t,
       y <- y + vy * t
-  }
-
-updateBlock deltaTime block ball =
-  { block |
-      visible <- (block.visible && not (ball `within` block))
   }
 
 {-- Part 4: Display the game --------------------------------------------------
