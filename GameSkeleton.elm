@@ -47,14 +47,12 @@ be an empty list (no objects at the start):
 (gameWidth,gameHeight) = (400, 600)
 (halfWidth,halfHeight) = (200, 300)
 
-type alias Ball =
-  { x:Float, y:Float, vx:Float, vy:Float }
+type alias Moving a = { a | vx:Float, vy:Float }
+type alias Box = { x:Float, y:Float, w:Float, h:Float }
 
-type alias Player =
-  { x:Float, y:Float, vx:Float, vy:Float }
-
-type alias Brick =
-  { x:Float, y:Float, w:Float, h:Float }
+type alias Ball = Moving Box
+type alias Player = Moving Box
+type alias Brick = Box
 
 brick : Float -> Float -> Float -> Float -> Brick
 brick x y w h = { x=x, y=y, w=w, h=h }
@@ -74,12 +72,16 @@ defaultGame =
       , y = 0
       , vx = 200
       , vy = 200
+      , w = 15
+      , h = 15
       }
   , player =
       { x = 0
       , y = 20 - halfHeight
       , vx = 0
       , vy = 0
+      , w = 40
+      , h = 10
       }
   , bricks = List.map (\x -> brick (brickWidth * 2 * x) (halfWidth - 40) brickWidth brickHeight) [-2..2]
   }
@@ -128,8 +130,8 @@ goBrickHits brick (ball,bricks) =
 near k c n =
     n >= k-c && n <= k+c
 
-within ball paddle =
-    near paddle.x 20 ball.x && near paddle.y 10 ball.y
+within ball box =
+    near box.x (box.w / 2) ball.x && near box.y 10 ball.y
 
 stepV v lowerCollision upperCollision =
   if | lowerCollision -> abs v
@@ -163,9 +165,9 @@ display (w,h) ({ball,player,bricks} as gameState) =
     collage 1000 1000 <|
       [ rect gameWidth gameHeight
           |> filled green
-      , oval 15 15
+      , oval ball.w ball.h
             |> make ball
-      , rect 40 10
+      , rect player.w player.h
           |> make player
       , group <| List.map (\b -> rect b.w b.h |> make b) bricks
       ]
