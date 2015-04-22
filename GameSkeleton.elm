@@ -47,10 +47,12 @@ be an empty list (no objects at the start):
 (gameWidth,gameHeight) = (400, 600)
 (halfWidth,halfHeight) = (200, 300)
 
-type alias Moving a = { a | vx:Float, vy:Float }
-type alias Box = { x:Float, y:Float, w:Float, h:Float }
+type alias Positioned a = { a | x:Float, y:Float }
+type alias Moving     a = { a | vx:Float, vy:Float }
+type alias Sized      a = { a | w:Float, h:Float }
+type alias Box          = Sized (Positioned {})
 
-type alias Ball = Moving Box
+type alias Ball = Moving (Positioned { r:Float })
 type alias Player = Moving Box
 type alias Brick = Box
 
@@ -72,8 +74,7 @@ defaultGame =
       , y = 0
       , vx = 200
       , vy = 200
-      , w = 15
-      , h = 15
+      , r = 8
       }
   , player =
       { x = 0
@@ -110,9 +111,9 @@ stepBall : Time -> Ball -> Player -> List Brick -> (Ball, List Brick)
 stepBall delta ({x,y,vx,vy} as ball) player bricks =
   let
     hitPlayer = (ball `within` player)
-    hitCeiling = (y > halfHeight - 7)
+    hitCeiling = (y > halfHeight - ball.r)
     ball' = physicsUpdate delta
-      { ball | vx <- stepV vx (x < 7 - halfWidth) (x > halfWidth - 7)
+      { ball | vx <- stepV vx (x < ball.r - halfWidth) (x > halfWidth - ball.r)
              , vy <- stepV vy hitPlayer hitCeiling
       }
   in
@@ -130,8 +131,8 @@ goBrickHits brick (ball,bricks) =
 near k c n =
     n >= k-c && n <= k+c
 
-within ball box =
-    near box.x (box.w / 2) ball.x && near box.y 10 ball.y
+within ball box = (ball.x |> near box.x (ball.r + box.w / 2))
+               && (ball.y |> near box.y (ball.r + box.h / 2))
 
 stepV v lowerCollision upperCollision =
   if | lowerCollision -> abs v
@@ -165,7 +166,7 @@ display (w,h) ({ball,player,bricks} as gameState) =
     collage 1000 1000 <|
       [ rect gameWidth gameHeight
           |> filled green
-      , oval ball.w ball.h
+      , circle ball.r
             |> make ball
       , rect player.w player.h
           |> make player
