@@ -2,7 +2,7 @@ import Color (..)
 import Graphics.Collage (..)
 import Graphics.Element (..)
 import Keyboard
-import Signal
+import Signal (..)
 import Time (..)
 import Window
 import Text
@@ -21,7 +21,7 @@ Task: Redefine `UserInput` to include all of the information you need.
 type alias UserInput = { dir : Int }
 
 userInput : Signal UserInput
-userInput = Signal.map UserInput (Signal.map .x Keyboard.arrows)
+userInput = UserInput <~ (.x <~ Keyboard.arrows)
 
 type alias Input =
     { timeDelta : Float
@@ -185,20 +185,18 @@ The following code puts it all together and shows it on screen.
 ------------------------------------------------------------------------------}
 
 delta : Signal Float
-delta =
-    Signal.map inSeconds (fps 30)
+delta = inSeconds <~ fps 30
 
 
 input : Signal Input
 input =
-    Signal.sampleOn delta (Signal.map2 Input delta userInput)
+    sampleOn delta (Input <~ delta ~ userInput)
 
 
 gameState : Signal GameState
 gameState =
-    Signal.foldp stepGame defaultGame input
+    foldp stepGame defaultGame input
 
 
 main : Signal Element
-main =
-    Signal.map2 display Window.dimensions gameState
+main = display <~ Window.dimensions ~ gameState
