@@ -54,17 +54,17 @@ type alias Box          = Sized (Positioned {})
 
 type alias Ball = Moving (Positioned { r:Float })
 type alias Player = Moving Box
-type alias Brick = Box
+type alias Block = Box
 
-brick : Float -> Float -> Float -> Float -> Brick
-brick x y w h = { x=x, y=y, w=w, h=h }
-(brickWidth, brickHeight) = (40,10)
+block : Float -> Float -> Float -> Float -> Block
+block x y w h = { x=x, y=y, w=w, h=h }
+(blockWidth, blockHeight) = (40,10)
 
 
 type alias GameState =
   { ball : Ball
   , player : Player
-  , bricks : List Brick
+  , blocks : List Block
   }
 
 defaultGame : GameState
@@ -84,7 +84,7 @@ defaultGame =
       , w = 40
       , h = 10
       }
-  , bricks = List.map (\x -> brick (brickWidth * 2 * x) (halfWidth - 40) brickWidth brickHeight) [-2..2]
+  , blocks = List.map (\x -> block (blockWidth * 2 * x) (halfWidth - 40) blockWidth blockHeight) [-2..2]
   }
 
 {-- Part 3: Update the game ---------------------------------------------------
@@ -98,17 +98,17 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({ball,player,bricks} as game) =
+stepGame {timeDelta,userInput} ({ball,player,blocks} as game) =
   let
-    (ball', bricks') = stepBall timeDelta ball player bricks
+    (ball', blocks') = stepBall timeDelta ball player blocks
   in
     { game | ball <- ball'
-           , bricks <- bricks'
+           , blocks <- blocks'
            , player <- updatePlayer timeDelta userInput.dir player
     }
 
-stepBall : Time -> Ball -> Player -> List Brick -> (Ball, List Brick)
-stepBall delta ({x,y,vx,vy} as ball) player bricks =
+stepBall : Time -> Ball -> Player -> List Block -> (Ball, List Block)
+stepBall delta ({x,y,vx,vy} as ball) player blocks =
   let
     hitPlayer = (ball `within` player)
     hitCeiling = (y > halfHeight - ball.r)
@@ -117,16 +117,16 @@ stepBall delta ({x,y,vx,vy} as ball) player bricks =
              , vy <- stepV vy hitPlayer hitCeiling
       }
   in
-    (List.foldr goBrickHits (ball',[]) bricks)
+    (List.foldr goBlockHits (ball',[]) blocks)
 
-goBrickHits : Brick -> (Ball,List Brick) -> (Ball,List Brick)
-goBrickHits brick (ball,bricks) =
+goBlockHits : Block -> (Ball,List Block) -> (Ball,List Block)
+goBlockHits block (ball,blocks) =
   let
-    hit = ball `within` brick
-    bricks' = if hit then bricks else brick::bricks
+    hit = ball `within` block
+    blocks' = if hit then blocks else block::blocks
     ball' = if hit then { ball | vy <- -ball.vy } else ball
   in
-    (ball', bricks')
+    (ball', blocks')
 
 near k c n =
     n >= k-c && n <= k+c
@@ -161,7 +161,7 @@ Task: redefine `display` to use the GameState you defined in part 2.
 ------------------------------------------------------------------------------}
 
 display : (Int,Int) -> GameState -> Element
-display (w,h) ({ball,player,bricks} as gameState) =
+display (w,h) ({ball,player,blocks} as gameState) =
   container w h middle <|
     collage 1000 1000 <|
       [ rect gameWidth gameHeight
@@ -170,7 +170,7 @@ display (w,h) ({ball,player,bricks} as gameState) =
             |> make ball
       , rect player.w player.h
           |> make player
-      , group <| List.map (\b -> rect b.w b.h |> make b) bricks
+      , group <| List.map (\b -> rect b.w b.h |> make b) blocks
       ]
 
 make obj shape =
