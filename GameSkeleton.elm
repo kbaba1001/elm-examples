@@ -3,7 +3,7 @@ import Graphics.Collage (..)
 import Graphics.Element (..)
 import Keyboard
 import Signal (..)
-import Time (..)
+import Time (fps, inSeconds, Time)
 import Window
 import Text
 import List
@@ -71,7 +71,7 @@ defaultGame : GameState
 defaultGame =
   { ball = { x=0, y=0, vx=200, vy=200, r=8 }
   , player = { x=0, y=20-halfHeight, vx=0, vy=0, w=40, h=10 }
-  , blocks = List.map (\x -> block (blockWidth * 2 * x) (halfWidth - 40) blockWidth blockHeight) [-2..2]
+  , blocks = List.map (\x -> block (blockWidth * 2 * x) (halfHeight / 2) blockWidth blockHeight) [-2..2]
   }
 
 {-- Part 3: Update the game ---------------------------------------------------
@@ -85,11 +85,11 @@ Task: redefine `stepGame` to use the UserInput and GameState
 ------------------------------------------------------------------------------}
 
 stepGame : Input -> GameState -> GameState
-stepGame {timeDelta,userInput} ({ball,player,blocks} as game) =
+stepGame {timeDelta,userInput} ({ball,player,blocks} as gameState) =
   let
     (ball', blocks') = stepBall timeDelta ball player blocks
   in
-    { game | ball <- ball'
+    { gameState | ball <- ball'
            , blocks <- blocks'
            , player <- stepPlayer timeDelta userInput.dir player
     }
@@ -150,11 +150,11 @@ Task: redefine `display` to use the GameState you defined in part 2.
 display : (Int,Int) -> GameState -> Element
 display (w,h) ({ball,player,blocks} as gameState) =
   container w h middle <|
-    collage 1000 1000 <|
+    collage gameWidth gameHeight <|
       [ rect gameWidth gameHeight
           |> filled green
       , circle ball.r
-            |> make ball
+          |> make ball
       , rect player.w player.h
           |> make player
       , group <| List.map (\b -> rect b.w b.h |> make b) blocks
