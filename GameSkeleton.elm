@@ -94,6 +94,13 @@ stepGame {timeDelta,userInput} ({ball,player,blocks} as gameState) =
            , player <- stepPlayer timeDelta userInput.dir player
     }
 
+stepPlayer deltaTime dir player =
+  let player' = stepObj deltaTime { player | vx <- toFloat dir * 200 }
+  in
+    { player' |
+        x <- clamp (22-halfWidth) (halfWidth-22) player'.x
+    }
+
 stepBall : Time -> Ball -> Player -> List Block -> (Ball, List Block)
 stepBall delta ({x,y,vx,vy} as ball) player blocks =
   let
@@ -125,13 +132,6 @@ stepV v lowerCollision upperCollision =
   if | lowerCollision -> abs v
      | upperCollision -> 0 - abs v
      | otherwise      -> v
-
-stepPlayer deltaTime dir player =
-  let player' = stepObj deltaTime { player | vx <- toFloat dir * 200 }
-  in
-    { player' |
-        x <- clamp (22-halfWidth) (halfWidth-22) player'.x
-    }
 
 stepObj t ({x,y,vx,vy} as obj) =
   { obj |
