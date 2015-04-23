@@ -69,21 +69,8 @@ type alias GameState =
 
 defaultGame : GameState
 defaultGame =
-  { ball =
-      { x = 0
-      , y = 0
-      , vx = 200
-      , vy = 200
-      , r = 8
-      }
-  , player =
-      { x = 0
-      , y = 20 - halfHeight
-      , vx = 0
-      , vy = 0
-      , w = 40
-      , h = 10
-      }
+  { ball = { x=0, y=0, vx=200, vy=200, r=8 }
+  , player = { x=0, y=20-halfHeight, vx=0, vy=0, w=40, h=10 }
   , blocks = List.map (\x -> block (blockWidth * 2 * x) (halfWidth - 40) blockWidth blockHeight) [-2..2]
   }
 
@@ -104,7 +91,7 @@ stepGame {timeDelta,userInput} ({ball,player,blocks} as game) =
   in
     { game | ball <- ball'
            , blocks <- blocks'
-           , player <- updatePlayer timeDelta userInput.dir player
+           , player <- stepPlayer timeDelta userInput.dir player
     }
 
 stepBall : Time -> Ball -> Player -> List Block -> (Ball, List Block)
@@ -112,7 +99,7 @@ stepBall delta ({x,y,vx,vy} as ball) player blocks =
   let
     hitPlayer = (ball `within` player)
     hitCeiling = (y > halfHeight - ball.r)
-    ball' = physicsUpdate delta
+    ball' = stepObj delta
       { ball | vx <- stepV vx (x < ball.r - halfWidth) (x > halfWidth - ball.r)
              , vy <- stepV vy hitPlayer hitCeiling
       }
@@ -139,14 +126,14 @@ stepV v lowerCollision upperCollision =
      | upperCollision -> 0 - abs v
      | otherwise      -> v
 
-updatePlayer deltaTime dir player =
-  let player1 = physicsUpdate deltaTime { player | vx <- toFloat dir * 200 }
+stepPlayer deltaTime dir player =
+  let player1 = stepObj deltaTime { player | vx <- toFloat dir * 200 }
   in
     { player1 |
         x <- clamp (22-halfWidth) (halfWidth-22) player1.x
     }
 
-physicsUpdate t ({x,y,vx,vy} as obj) =
+stepObj t ({x,y,vx,vy} as obj) =
   { obj |
       x <- x + vx * t,
       y <- y + vy * t
