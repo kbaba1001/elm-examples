@@ -127,10 +127,10 @@ stepV v lowerCollision upperCollision =
      | otherwise      -> v
 
 stepPlayer deltaTime dir player =
-  let player1 = stepObj deltaTime { player | vx <- toFloat dir * 200 }
+  let player' = stepObj deltaTime { player | vx <- toFloat dir * 200 }
   in
-    { player1 |
-        x <- clamp (22-halfWidth) (halfWidth-22) player1.x
+    { player' |
+        x <- clamp (22-halfWidth) (halfWidth-22) player'.x
     }
 
 stepObj t ({x,y,vx,vy} as obj) =
